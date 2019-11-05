@@ -43,9 +43,11 @@ cloud    ALL=(ALL)       NOPASSWD: ALL
 
 确保管理机的`cloud`用户能免密码ssh到所有节点（包括管理机自身）。
 
+确保所有机器的`cloud`用户能免密码sudo。
+
 ## 配置
 
-修改`main.py`，根据变量提示按需修改。
+修改`main.py`，修改`MODE`、`SSH_PORT`、`server_list`、`users`等参数。
 
 ## 运行
 

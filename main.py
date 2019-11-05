@@ -136,6 +136,7 @@ def get_node_instances(ip: str = None) -> dict:
     :param ip: 节点ip地址（hostname也行），如果为None，则为本机
     :return:
     """
+    data = {}
     if not ip:
         lxc_list_raw = os.popen('sudo lxc list').read().split('\n')
     else:
@@ -152,8 +153,7 @@ def get_node_instances(ip: str = None) -> dict:
             'ipv4': ipv4,
             'location': location,
         })
-
-    pass
+    return data
 
 
 def get_cluster_data() -> list:
