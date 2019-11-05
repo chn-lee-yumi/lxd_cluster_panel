@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>虚拟化集群管理系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/element-ui/2.9.2/theme-chalk/index.css">
+</head>
+<body>
+<div id="app" v-loading="loading">
+
+    <h1>虚拟化集群管理系统</h1>
+
+    <h2>集群状态</h2>
+    <el-table :data="clusterData" style="width: 100%">
+        <el-table-column prop="node" label="节点"></el-table-column>
+        <el-table-column prop="cpu" label="CPU（使用率/核数）"></el-table-column>
+        <el-table-column prop="load" label="Load Average"></el-table-column>
+        <el-table-column prop="mem" label="内存（使用量/总数/使用率）"></el-table-column>
+        <el-table-column prop="swap" label="SWAP（使用量/总数/使用率）"></el-table-column>
+    </el-table>
+
+    <h2>创建实例</h2>
+    <el-form :inline="true" :model="formCreateInstance">
+        <el-form-item label="虚拟机名字">
+            <el-input v-model="formCreateInstance.name" placeholder="虚拟机名字"></el-input>
+        </el-form-item>
+        <el-form-item label="操作系统">
+            <el-select v-model="formCreateInstance.system" placeholder="操作系统">
+                <el-option label="ubuntu18.04" value="ubuntu18.04"></el-option>
+                <!--<el-option label="debian10" value="debian:10"></el-option>-->
+                <!--<el-option label="centos7" value="centos:7"></el-option>-->
+            </el-select>
+        </el-form-item>
+        <el-form-item label="虚拟机配置">
+            <el-select v-model="formCreateInstance.type" placeholder="虚拟机配置">
+                <el-option label="轻量型 1核/128M" value="1C128M"></el-option>
+                <el-option label="通用型 1核/256M" value="1C256M"></el-option>
+                <el-option label="通用型 2核/512M" value="2C512M"></el-option>
+                <el-option label="内存型 2核/1G" value="2C1G"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="createInstance">创建</el-button>
+        </el-form-item>
+    </el-form>
+
+    <h2>实例列表</h2>
+    <el-table :data="instanceData" style="width: 100%">
+        <el-table-column prop="name" label="虚拟机名字"></el-table-column>
+        <el-table-column prop="state" label="状态"></el-table-column>
+        <el-table-column prop="ipv4" label="ipv4"></el-table-column>
+        <!--<el-table-column prop="type" label="配置"></el-table-column>-->
+        <el-table-column prop="location" label="宿主"></el-table-column>
+    </el-table>
+
+    <h2>实例管理</h2>
+    <el-form :inline="true" :model="formManageInstance">
+        <el-form-item label="虚拟机名字">
+            <el-input v-model="formManageInstance.name" placeholder="虚拟机名字"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="success" @click="optInstance('start')">开机</el-button>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="info" @click="optInstance('stop')">关机</el-button>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="warning" @click="optInstance('restart')">重启</el-button>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="danger" @click="optInstance('delete')">删除</el-button>
+        </el-form-item>
+    </el-form>
+
+    <h2>使用说明</h2>
+    <el-card>
+        <div class="text item">本项目使用LXD进行虚拟化，共享宿主机内核，秒级启动。适合用于Linux学习、软件测试、集群管理学习等。</div>
+        <div class="text item">虚拟机启动后可通过跳板机或OpenVPN进行连接。</div>
+    </el-card>
+
+</div>
+</body>
+
+<script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script><!-- import Vue before Element -->
+<script src="https://cdn.bootcss.com/element-ui/2.9.2/index.js"></script>
+<script src="https://cdn.bootcss.com/axios/0.19.0-beta.1/axios.min.js"></script>
+<script>
+    new Vue({
+      el: '#app',
+      data: {
+          loading: false,
+          seletedInstance:'',
+          clusterData: null,
+          instanceData: null,
+          //clusterData: [{
+            //node: '测试节点',
+            //cpu: '50% / 4核',
+            //load: '0.08 / 0.03 / 0.01',
+            //mem: '128M / 512M / 25%',
+            //swap: '1M / 100M / 1%'
+          //}],
+          //instanceData: [{
+            //name: '测试实例',
+            //state: 'RUNNING',
+            //ipv4: '240.156.0.167',
+            //type: '4核/256M',
+            //location: '测试节点'
+          //}],
+          formCreateInstance:{
+            name:'',
+            type:''
+          },
+          formManageInstance:{
+            name:''
+          }
+      },
+      mounted:function (){
+        this.updateStatus();
+        this.timer = setInterval(this.updateStatus, 10000);
+      },
+      methods: {
+        updateStatus: function () {
+          var that=this;
+          axios.get('/api/status')
+              .then(function (response) {
+                console.log(response);
+                that.clusterData=response["data"]["clusterData"];
+                that.instanceData=response["data"]["instanceData"];
+              })
+              .catch(function (error) {
+                console.log(error);
+              })
+        },
+        createInstance(){
+            this.loading=true;
+            var that=this;
+            axios.post('/api/createInstance',{
+                'name': that.formCreateInstance.name,
+                'system': that.formCreateInstance.system,
+                'type': that.formCreateInstance.type
+              })
+              .then(function (response) {
+                console.log(response);
+                if (response['data'] != "")
+                    alert(response['data']);
+                else
+                    alert("执行成功！");
+                that.updateStatus;
+              })
+              .catch(function (error) {
+                console.log(error);
+              })
+              .finally(function(){
+                that.loading=false;
+              })
+        },
+        optInstance(opt) {
+          this.loading=true;
+          var that=this;
+          axios.post('/api/optInstance',{
+                'name': that.formManageInstance.name,
+                'opt': opt
+              })
+              .then(function (response) {
+                console.log(response);
+                if (response['data'] != "")
+                    alert(response['data']);
+                else
+                    alert("执行成功！");
+                that.updateStatus;
+              })
+              .catch(function (error) {
+                console.log(error);
+              })
+              .finally(function(){
+                that.loading=false;
+              })
+        },
+      }
+    })
+
+
+</script>
+</html>
