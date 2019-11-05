@@ -14,13 +14,14 @@ login_manager.init_app(app)
 data_time = 0
 
 MODE = 'cluster'  # cluster或alone。cluster使用lxd原生cluster进行集群管理，alone则是由本系统进行集群管理。
+SSH_PORT = '22'  # 服务器SSH端口
 server_list = ['10.202.42.156', '10.202.42.157']  # 仅alone模式用
 
 # TODO：实例规格API
 
 ######################以下是登录部分代码######################
 
-users = {'admin': {'password': '12345'}}
+users = {'admin': {'password': '12345'}}  # 前端页面的用户名密码
 
 
 class User(flask_login.UserMixin):
@@ -96,7 +97,8 @@ def get_node_info(ip: str, node: str = None) -> dict:
     """
     if not node:
         node = ip
-    sys_info = os.popen('ssh ' + ip + " \"top -b -n 1 | head -n5 && lscpu | grep 'CPU(s):' | awk '{print $2}'\"").read().strip().split(
+    sys_info = os.popen(
+        'ssh -p' + SSH_PORT + ' ' + ip + " \"top -b -n 1 | head -n5 && lscpu | grep 'CPU(s):' | awk '{print $2}'\"").read().strip().split(
         '\n')
     cpu = 100 - float(sys_info[2].split()[7])
     core = sys_info[5].split()[1]
@@ -137,7 +139,7 @@ def get_node_instances(ip: str = None) -> dict:
     if not ip:
         lxc_list_raw = os.popen('sudo lxc list').read().split('\n')
     else:
-        lxc_list_raw = os.popen('ssh ' + ip + ' sudo lxc list').read().split('\n')
+        lxc_list_raw = os.popen('ssh -p' + SSH_PORT + ' ' + ip + ' sudo lxc list').read().split('\n')
     for line_num in range(3, len(lxc_list_raw) - 1, 2):
         line = list(map(lambda x: x.strip(' '), lxc_list_raw[line_num].split('|')))
         name = line[1]
