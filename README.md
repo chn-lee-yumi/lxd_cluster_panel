@@ -33,6 +33,12 @@ chmod 600 ~/.ssh/authorized_keys
 
 修改`~/.ssh/authorized_keys`的内容为管理机的`id_rsa.pub`文件内容。
 
+root用户执行`visudo`，添加下面这行，使得cloud用户无需密码即可sudo。
+
+```
+cloud    ALL=(ALL)       NOPASSWD: ALL
+```
+
 ## 测试
 
 确保管理机的`cloud`用户能免密码ssh到所有节点（包括管理机自身）。
