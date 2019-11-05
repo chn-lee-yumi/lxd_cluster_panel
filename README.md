@@ -26,8 +26,9 @@ ssh-keygen -t rsa
 adduser --disabled-password cloud
 su - cloud
 mkdir ~/.ssh
+chmod 700 ~/.ssh
 touch ~/.ssh/authorized_keys
-chmod -R 600 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
 ```
 
 修改`~/.ssh/authorized_keys`的内容为管理机的`id_rsa.pub`文件内容。
