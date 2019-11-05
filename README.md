@@ -54,3 +54,15 @@ cloud    ALL=(ALL)       NOPASSWD: ALL
 `python3 main.py`
 
 然后访问对应端口即可使用。
+
+# 镜像模板制作
+
+官方镜像没有开启ssh，我们需要自制一个镜像，配置好ssh和账号密码，这样我们创建好实例后就可以直接远程连接。
+
+推荐阅读：https://linux.cn/article-8107-1.html
+
+当前版本，启动镜像的名字需要在前端页面(index.html)进行修改。实例配置也是。这样会存在被攻击的可能性，将于后面的版本修复。
+
+# 截图
+
+![screenshot](screenshot.png)
