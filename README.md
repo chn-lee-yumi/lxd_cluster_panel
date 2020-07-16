@@ -66,3 +66,7 @@ cloud    ALL=(ALL)       NOPASSWD: ALL
 # 截图
 
 ![screenshot](screenshot.png)
+
+# TODO
+
+- api_create_instance standalone 模式 有 bug 待修复
